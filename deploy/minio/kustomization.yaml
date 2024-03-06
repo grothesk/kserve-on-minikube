@@ -1,0 +1,7 @@
+namespace: model-storage
+
+resources:
+ - namespace.yaml
+ - persistentvolumeclaim.yaml
+ - deployment.yaml
+ - service.yaml

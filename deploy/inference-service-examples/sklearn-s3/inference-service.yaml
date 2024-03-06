@@ -1,0 +1,12 @@
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  name: "sklearn-iris"
+spec:
+  predictor:
+    minReplicas: 0
+    maxReplicas: 3
+    serviceAccountName: sa
+    sklearn:
+      args: ["--enable_docs_url=True"]
+      storageUri: "s3://models/sklearn/iris/1.0/models"
