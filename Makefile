@@ -27,6 +27,7 @@ get-subnet:
 
 .PHONY: configure-lb 
 configure-lb:
+	sh scripts/get-subnet-from-node.sh
 	minikube -p ${CLUSTER_NAME} addons configure metallb 
 
 .PHONY: install-knative-serving
