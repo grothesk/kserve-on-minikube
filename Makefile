@@ -2,6 +2,7 @@ CLUSTER_NAME ?= ksurf
 CLUSTER_CPU ?= 10
 CLUSTER_MEMORY ?= 12g
 CLUSTER_DISK_SIZE ?= 40g
+CLUSTER_DRIVER ?= docker
 
 KNATIVE_VERSION := v1.13.1
 ISTIO_VERSION := 1.20.3
@@ -10,7 +11,7 @@ KSERVE_VERSION := v0.11.0
 
 .PHONY: create-cluster
 create-cluster:
-	minikube -p ${CLUSTER_NAME} start --cpus=${CLUSTER_CPU} --memory=${CLUSTER_MEMORY} --disk-size=${CLUSTER_DISK_SIZE}
+	minikube -p ${CLUSTER_NAME} start --cpus=${CLUSTER_CPU} --memory=${CLUSTER_MEMORY} --disk-size=${CLUSTER_DISK_SIZE} --driver=${CLUSTER_DRIVER}
 
 .PHONY: enable-addons
 enable-addons:
