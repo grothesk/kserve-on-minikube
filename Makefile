@@ -69,6 +69,10 @@ install-cert-manager:
 	URL=https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml \
 	FILE=cert-manager.yaml TARGET_DIR=deploy/cert-manager scripts/get-and-apply.sh
 
+.PHONY: wait-for-cert-manager
+wait-for-cert-manager:
+	sh scripts/wait-for-cert-manager.sh
+
 .PHONY: install-kserve
 install-kserve:
 	URL=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve.yaml \
@@ -88,6 +92,9 @@ add-minio-entry:
 	kubectl -n model-storage get svc minio -o json | jq -r .status.loadBalancer.ingress[0].ip > minio_ip
 	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-minio-entry.sh
 	rm minio_ip
+
+.PHONY: install
+install: create-cluster enable-addons configure-lb install-knative-serving install-istio integrate-istio-knative configure-mtls configure-dns verify-istio-installation install-cert-manager wait-for-cert-manager install-kserve install-runtimes install-minio add-minio-entry
 
 .PHONY: create-model-bucket
 create-model-bucket:
