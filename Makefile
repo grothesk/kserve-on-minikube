@@ -9,6 +9,8 @@ ISTIO_VERSION := 1.20.3
 CERT_MANAGER_VERSION := v1.14.3
 KSERVE_VERSION := v0.11.0
 
+MINIO_CLIENT_BIN ?= mc
+
 .PHONY: create-cluster
 create-cluster:
 	minikube -p ${CLUSTER_NAME} start --cpus=${CLUSTER_CPU} --memory=${CLUSTER_MEMORY} --disk-size=${CLUSTER_DISK_SIZE} --driver=${CLUSTER_DRIVER}
@@ -89,12 +91,12 @@ add-minio-entry:
 
 .PHONY: create-model-bucket
 create-model-bucket:
-	mc config host add model-storage http://minio.${CLUSTER_NAME}.minikube:9000 minio minio123
-	mc mb model-storage/models/sklearn/iris/1.0/models
+	${MINIO_CLIENT_BIN} config host add model-storage http://minio.${CLUSTER_NAME}.minikube:9000 minio minio123
+	${MINIO_CLIENT_BIN} mb model-storage/models/sklearn/iris/1.0/models
 
 .PHONY: upload-model
 upload-model:
-	mc cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models
+	${MINIO_CLIENT_BIN} cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models
 
 .PHONY: add-inference-service-entry
 add-inference-service-entry:
