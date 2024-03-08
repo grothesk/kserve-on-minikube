@@ -60,7 +60,7 @@ configure-dns:
   	--type merge \
   	--patch '{"data":{"${CLUSTER_NAME}.minikube":""}}'
 
-.PHONY: verify-instio-installation
+.PHONY: verify-istio-installation
 verify-istio-installation:
 	istio-${ISTIO_VERSION}/bin/istioctl verify-install
 
