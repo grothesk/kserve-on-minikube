@@ -8,23 +8,6 @@ ISTIO_VERSION := 1.20.3
 CERT_MANAGER_VERSION := v1.14.3
 KSERVE_VERSION := v0.11.0
 
-.PHONY: create-cluster
-create-cluster:
-	minikube -p ${CLUSTER_NAME} start --cpus=${CLUSTER_CPU} --memory=${CLUSTER_MEMORY} --disk-size=${CLUSTER_DISK_SIZE}
-
-.PHONY: enable-addons
-enable-addons:
-	minikube -p ${CLUSTER_NAME} addons enable ingress
-	minikube -p ${CLUSTER_NAME} addons enable ingress-dns
-	minikube -p ${CLUSTER_NAME} addons enable metallb
-
-.PHONY: get-subnet
-get-subnet:
-	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/get-subnet.sh
-
-.PHONY: configure-lb 
-configure-lb:
-	minikube -p ${CLUSTER_NAME} addons configure metallb 
 
 .PHONY: install-knative-serving
 install-knative-serving:
@@ -80,32 +63,34 @@ install-runtimes:
 install-minio:
 	kubectl apply -k deploy/minio
 
-.PHONY: add-minio-entry
-add-minio-entry:
-	kubectl -n model-storage get svc minio -o json | jq -r .status.loadBalancer.ingress[0].ip > minio_ip
-	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-minio-entry.sh
-	rm minio_ip
+#.PHONY: add-minio-entry
+#add-minio-entry:
+#	kubectl -n model-storage get svc minio -o json | jq -r .status.loadBalancer.ingress[0].ip > minio_ip
+#	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-minio-entry.sh
+#	rm minio_ip
 
 .PHONY: create-model-bucket
 create-model-bucket:
-	mc config host add model-storage http://minio.${CLUSTER_NAME}.minikube:9000 minio minio123
+	mc config host add model-storage http://localhost:9000 minio minio123
 	mc mb model-storage/models/sklearn/iris/1.0/models
 
 .PHONY: upload-model
 upload-model:
-	mc cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models
+	mc cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models/model.joblib
 
-.PHONY: add-inference-service-entry
-add-inference-service-entry:
-	kubectl -n istio-system get svc istio-ingressgateway -o json | jq -r .status.loadBalancer.ingress[0].ip > sklearn_s3_ip
-	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-inference-service-entry.sh
-	rm sklearn_s3_ip
+#.PHONY: add-inference-service-entry
+#add-inference-service-entry:
+#	kubectl -n istio-system get svc istio-ingressgateway -o json | jq -r .status.loadBalancer.ingress[0].ip > sklearn_s3_ip
+#	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-inference-service-entry.sh
+#	rm sklearn_s3_ip
 
-.PHONY: infer
+deploy-inference-service:
+	kubectl apply -k deploy/inference-service-examples/sklearn-s3
+
 infer:
-	curl -X POST http://sklearn-iris-predictor.examples.${CLUSTER_NAME}.minikube/v2/models/sklearn-iris/infer \
-    -H 'accept: application/json' -H 'Content-Type: application/json' \
-    --data @data/iris-input.json | jq
+	curl -XPOST http://localhost/v2/models/sklearn-iris/infer -H 'Host: sklearn-iris-predictor.examples.ksurf.minikube' -H 'accept: application/json' -H 'Content-Type: application/json' --data @data/iris-input.json -v
+	curl -XPOST http://sklearn-iris-predictor.examples.ksurf.minikube/v2/models/sklearn-iris/infer -H 'accept: application/json' -H 'Content-Type: application/json' --data @data/iris-input.json -v
+
 
 .PHONY: watch-inference-pods
 watch-inference-pods:
@@ -113,4 +98,5 @@ watch-inference-pods:
 
 .PHONY: infer-concurrent
 infer-concurrent:
-	./hey -z 30s -c 300 -m POST -D data/iris-input.json http://sklearn-iris-predictor.examples.${CLUSTER_NAME}.minikube/v2/models/sklearn-iris/infer
+	hey -z 30s -c 300 -m POST -D data/iris-input.json http://localhost/v2/models/sklearn-iris/infer -H 'Host: sklearn-iris-predictor.examples.ksurf.minikube' -H 'accept: application/json' -H 'Content-Type: application/json'
+	hey -z 20s -c 500 -m POST -H 'accept: application/json' -D data/iris-input.json -T application/json http://sklearn-iris-predictor.examples.ksurf.minikube/v2/models/sklearn-iris/infer
