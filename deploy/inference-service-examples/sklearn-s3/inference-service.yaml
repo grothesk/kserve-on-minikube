@@ -4,7 +4,7 @@ metadata:
   name: "sklearn-iris"
 spec:
   predictor:
-    minReplicas: 0
+    minReplicas: 1
     maxReplicas: 3
     serviceAccountName: sa
     sklearn:
