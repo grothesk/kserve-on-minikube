@@ -1,4 +1,4 @@
-CLUSTER_NAME ?= ksurf
+CLUSTER_NAME ?= kserve
 CLUSTER_CPU ?= 10
 CLUSTER_MEMORY ?= 12g
 CLUSTER_DISK_SIZE ?= 40g
@@ -93,7 +93,7 @@ create-model-bucket:
 
 .PHONY: upload-model
 upload-model:
-	mc cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models
+	mc cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models/model.joblib
 
 .PHONY: add-inference-service-entry
 add-inference-service-entry:
