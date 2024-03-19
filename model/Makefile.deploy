@@ -1,0 +1,33 @@
+model_name ?= $(shell basename $(shell pwd))
+
+.deployed: $(shell find deploy -type f)
+	kubectl apply -k deploy
+	sh ../script/add-inference-service-entry.sh ${model_name}
+	touch .deployed
+
+.model-copied: $(shell find artifacts -type f)
+	mc mb model-storage/${model_name}
+	mc cp -r artifacts/* model-storage/${model_name}
+	touch .model-copied
+
+.PHONY: deploy
+deploy: cp-model .deployed
+
+.PHONY: undeploy
+undeploy:
+	kubectl delete -k deploy || true
+	rm -f .deployed
+
+.PHONY: redeploy
+redeploy: undeploy deploy
+
+.PHONY: rm-model
+rm-model:
+	mc rb model-storage/${model_name} --force --dangerous
+	rm -f .model-copied
+
+.PHONY: cp-model
+cp-model: .model-copied
+
+.PHONY: clean
+clean: rm-model undeploy
