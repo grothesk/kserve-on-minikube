@@ -1,6 +1,7 @@
 model_name ?= $(shell basename $(shell pwd))
 
 .deployed: $(shell find deploy -type f)
+	kubectl apply -f ../deploy/namespace.yaml
 	kubectl apply -k deploy
 	sh ../script/add-inference-service-entry.sh ${model_name}
 	touch .deployed
