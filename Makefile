@@ -25,18 +25,18 @@ enable-addons:
 get-subnet:
 	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/get-subnet.sh
 
-.PHONY: configure-lb 
+.PHONY: configure-lb
 configure-lb:
 	sh scripts/get-subnet-from-node.sh
-	minikube -p ${CLUSTER_NAME} addons configure metallb 
+	minikube -p ${CLUSTER_NAME} addons configure metallb
 
 .PHONY: install-knative-serving
 install-knative-serving:
 	URL=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-crds.yaml \
-	FILE=serving-crds.yaml TARGET_DIR=deploy/knative-serving scripts/get-and-apply.sh 
+	FILE=serving-crds.yaml TARGET_DIR=deploy/knative-serving scripts/get-and-apply.sh
 
 	URL=https://github.com/knative/serving/releases/download/knative-${KNATIVE_VERSION}/serving-core.yaml \
-	FILE=serving-core.yaml TARGET_DIR=deploy/knative-serving scripts/get-and-apply.sh 
+	FILE=serving-core.yaml TARGET_DIR=deploy/knative-serving scripts/get-and-apply.sh
 
 .PHONY: install-istio
 install-istio:
@@ -54,7 +54,7 @@ configure-mtls:
 	kubectl label namespace knative-serving istio-injection=enabled
 	kubectl apply -f deploy/istio/peer-authentication.yaml
 
-.PHONY: configure-dns 
+.PHONY: configure-dns
 configure-dns:
 	kubectl patch configmap/config-domain \
   	--namespace knative-serving \
@@ -94,17 +94,20 @@ add-minio-entry:
 	sudo CLUSTER_NAME=${CLUSTER_NAME} scripts/add-minio-entry.sh
 	rm minio_ip
 
+.PHONY: create-model-storage
+create-model-storage:
+	${MINIO_CLIENT_BIN} config host add model-storage http://minio.${CLUSTER_NAME}.minikube:9000 minio minio123
+
 .PHONY: install
-install: create-cluster enable-addons configure-lb install-knative-serving install-istio integrate-istio-knative configure-mtls configure-dns verify-istio-installation install-cert-manager wait-for-cert-manager install-kserve install-runtimes install-minio add-minio-entry
+install: create-cluster enable-addons configure-lb install-knative-serving install-istio integrate-istio-knative configure-mtls configure-dns verify-istio-installation install-cert-manager wait-for-cert-manager install-kserve install-runtimes install-minio add-minio-entry create-model-storage
 
 .PHONY: create-model-bucket
 create-model-bucket:
-	${MINIO_CLIENT_BIN} config host add model-storage http://minio.${CLUSTER_NAME}.minikube:9000 minio minio123
 	${MINIO_CLIENT_BIN} mb model-storage/models/sklearn/iris/1.0/models
 
 .PHONY: upload-model
 upload-model:
-	${MINIO_CLIENT_BIN} cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models
+	${MINIO_CLIENT_BIN} cp models/sklearn/iris/1.0/models/model.joblib model-storage/models/sklearn/iris/1.0/models/model.joblib
 
 .PHONY: add-inference-service-entry
 add-inference-service-entry:
@@ -125,3 +128,8 @@ watch-inference-pods:
 .PHONY: infer-concurrent
 infer-concurrent:
 	./hey -z 30s -c 300 -m POST -D data/iris-input.json http://sklearn-iris-predictor.examples.${CLUSTER_NAME}.minikube/v2/models/sklearn-iris/infer
+
+.PHONY: clean
+clean:
+	minikube -p ${CLUSTER_NAME} stop
+	minikube -p ${CLUSTER_NAME} delete
