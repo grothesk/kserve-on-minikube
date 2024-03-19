@@ -7,7 +7,7 @@ CLUSTER_DRIVER ?= docker
 KNATIVE_VERSION := v1.13.1
 ISTIO_VERSION := 1.20.3
 CERT_MANAGER_VERSION := v1.14.3
-KSERVE_VERSION := v0.11.0
+KSERVE_VERSION := v0.12.0
 
 MINIO_CLIENT_BIN ?= mc
 
@@ -81,8 +81,8 @@ install-kserve:
 
 .PHONY: install-runtimes
 install-runtimes:
-	URL=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-runtimes.yaml \
-	FILE=kserve-runtimes.yaml TARGET_DIR=deploy/kserve scripts/get-and-apply.sh
+	URL=https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-cluster-resources.yaml \
+	FILE=kserve-cluster-resources.yaml TARGET_DIR=deploy/kserve scripts/get-and-apply.sh
 
 .PHONY: install-minio
 install-minio:
