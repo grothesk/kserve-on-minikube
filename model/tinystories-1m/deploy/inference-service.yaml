@@ -1,0 +1,22 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: tinystories-1m
+spec:
+  predictor:
+    serviceAccountName: sa
+    model:
+      storageUri: s3://tinystories-1m/
+      modelFormat:
+        name: huggingface
+      args:
+      - --model_dir=/mnt/models
+      - --tensor_input_names=input_ids
+      resources:
+        limits:
+          cpu: "8"
+          memory: 2Gi
+          nvidia.com/gpu: "0"
+        requests:
+          cpu: 100m
+          memory: 2Gi

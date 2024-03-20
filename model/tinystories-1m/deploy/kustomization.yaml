@@ -1,0 +1,6 @@
+namespace: model
+
+resources:
+ - secret.yaml
+ - service-account.yaml
+ - inference-service.yaml

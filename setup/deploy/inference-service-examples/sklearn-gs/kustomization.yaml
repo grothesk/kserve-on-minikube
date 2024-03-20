@@ -1,5 +1,0 @@
-namespace: examples
-
-resources:
- - namespace.yaml
- - inference-service.yaml

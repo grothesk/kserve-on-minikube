@@ -1,0 +1,24 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: tinyllama
+spec:
+  predictor:
+    serviceAccountName: sa
+    model:
+      storageUri: s3://tinyllama/
+      modelFormat:
+        name: huggingface
+      args:
+      - --model_dir=/mnt/models
+      #- --model_name=distilgpt2
+      #- --tensor_input_names=input_ids
+      - --task=6
+      resources:
+        limits:
+          cpu: "8"
+          memory: 8Gi
+          nvidia.com/gpu: "0"
+        requests:
+          cpu: 100m
+          memory: 8Gi

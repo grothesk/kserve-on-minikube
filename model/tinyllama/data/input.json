@@ -1,0 +1,6 @@
+{
+  "text_input": "Can you tell me a story?",
+  "parameters": {
+    "max_new_tokens": 500
+  }
+}

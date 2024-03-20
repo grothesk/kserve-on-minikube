@@ -1,0 +1,6 @@
+{
+  "text_input": "Once upon a time there was...",
+  "parameters": {
+    "max_new_tokens": 500
+  }
+}

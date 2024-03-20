@@ -1,4 +1,7 @@
 model_name ?= $(shell basename $(shell pwd))
+url = $(shell cat url)
+
+default: deploy
 
 .deployed: $(shell find deploy -type f)
 	kubectl apply -f ../deploy/namespace.yaml
@@ -6,7 +9,7 @@ model_name ?= $(shell basename $(shell pwd))
 	sh ../script/add-inference-service-entry.sh ${model_name}
 	touch .deployed
 
-.model-copied: $(shell find artifacts -type f)
+.model-copied: artifacts $(shell find artifacts -type f)
 	mc mb model-storage/${model_name}
 	mc cp -r artifacts/* model-storage/${model_name}
 	touch .model-copied
@@ -24,7 +27,7 @@ redeploy: undeploy deploy
 
 .PHONY: rm-model
 rm-model:
-	mc rb model-storage/${model_name} --force --dangerous
+	mc rb model-storage/${model_name} --force --dangerous || true
 	rm -f .model-copied
 
 .PHONY: cp-model
@@ -32,3 +35,11 @@ cp-model: .model-copied
 
 .PHONY: clean
 clean: rm-model undeploy
+	rm -fr artifacts
+
+artifacts:
+	git clone ${url} artifacts
+
+.PHONY: test
+test:
+	curl -vX POST "http://${model_name}-predictor.model.${CLUSTER_NAME}.minikube/v2/models/${model_name}/generate" -T data/input.json
